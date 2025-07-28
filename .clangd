@@ -1,0 +1,26 @@
+Diagnostics:
+  ClangTidy:
+    Add: ["*"]
+    Remove: [
+      "fuchsia-trailing-return",
+      "llvmlibc-*",
+      #"fuchsia-*",
+      #"android-*",
+      #"zircon-*",
+      #"llvm-*",
+      #"readability-identifier-naming",
+      #"modernize-use-trailing-return-type"
+    ]
+
+# CompileFlags:
+  # Add: [
+    # -std=c17,
+    # -Wall,
+    # -Wextra,
+    # -D_CLANGD=1,
+    # -I./include,
+    # -I/usr/local/include,
+  # ]
+
+# Index:
+  # StandardLibrary: true
