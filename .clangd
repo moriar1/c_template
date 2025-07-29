@@ -4,6 +4,12 @@ Diagnostics:
     Remove: [
       "fuchsia-trailing-return",
       "llvmlibc-*",
+
+      "altera-struct-pack-align",
+      "cppcoreguidelines-avoid-magic-numbers",
+      "readability-magic-numbers",
+      "cppcoreguidelines-init-variables",
+      "readability-identifier-length",
       #"fuchsia-*",
       #"android-*",
       #"zircon-*",

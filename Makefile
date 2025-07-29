@@ -39,7 +39,8 @@ CFLAGS_COMMON ?= \
     -Wimplicit-fallthrough \
     -Werror=format-security \
     \
-    -Wno-unsafe-buffer-usage \
+    -Wno-unsafe-buffer-usage -Wno-declaration-after-statement -Wno-conditional-uninitialized \
+    -Wno-covered-switch-default
 # gcc: -fanalyzer -Wduplicated-cond -Wduplicated-branches
 # NOTE: here -f flags could load CPU
 
@@ -170,7 +171,7 @@ debug:                           ## Build debug version
 release:                         ## Build release version
 	$(Q)$(MAKE) BUILD=release all
 
-rebuild: clean all               ## Full clean build
+rebuild: clean all run           ## Full clean build
 
 run: run-debug                   ## Build and run (debug)
 run-debug: debug                 ## Build (debug) and run it
