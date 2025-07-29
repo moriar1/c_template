@@ -7,7 +7,7 @@
 #include <string.h>
 
 typedef enum {
-  LL_OK = 0L,
+  LL_OK = 0,
   LL_ERR_ALLOC,
   LL_ERR_EMPTY,
   LL_ERR_INVALID
@@ -50,7 +50,10 @@ static LinkedList *linked_list_new(void) {
   return list;
 }
 
-static void linked_list_free(LinkedList *list) {
+static void linked_list_destroy(LinkedList *list) {
+  if (!list) {
+    return;
+  }
   Node *current = list->head;
   while (current) {
     Node *previous = current;
@@ -58,9 +61,11 @@ static void linked_list_free(LinkedList *list) {
     free(previous);
   }
   list->head = NULL;
+  free(list);
+  list = NULL;
 }
 
-static LL_ErrCode linked_list_push(LinkedList *list, int64_t const num) {
+static LL_ErrCode linked_list_push(LinkedList *list, int64_t num) {
   if (!list) {
     return LL_ERR_INVALID;
   }
@@ -110,6 +115,9 @@ static LL_ErrCode linked_list_pop(LinkedList *list, int64_t *out) {
 }
 
 static void linked_list_print(LinkedList const *list) {
+  if (!list) {
+    return;
+  }
   Node *current = list->head;
   while (current) {
     printf("%" PRIi64 " ", current->data);
@@ -119,12 +127,15 @@ static void linked_list_print(LinkedList const *list) {
 }
 
 int main(void) {
+  errno = 0;
   LinkedList *const list = linked_list_new();
   if (!list) {
     perror("Error: cannot allocate linked list object");
     return EXIT_FAILURE;
   }
 
+  // Handling errors
+  // Variant 1
   LL_ErrCode rc = linked_list_push(list, 1);
   if (rc != LL_OK) {
     if (rc == LL_ERR_ALLOC) {
@@ -135,10 +146,32 @@ int main(void) {
                     ll_errcode_string(rc));
     }
   }
+
+  // Variant 2
   rc = linked_list_push(list, 2);
   if (rc != LL_OK) {
+    if (rc == LL_ERR_ALLOC) {
+      if (errno != 0) {
+        perror("linked_list_push failed");
+        errno = 0;
+      } else {
+        (void)fprintf(stderr, "linked_list_push failed: %s\n",
+                      ll_errcode_string(rc));
+      }
+    } else {
+      (void)fprintf(stderr, "linked_list_push failed: %s\n",
+                    ll_errcode_string(rc));
+    }
+    linked_list_destroy(list);
+    return EXIT_FAILURE;
+  }
+
+  // Variant 3
+  if (linked_list_push(list, 3) != LL_OK) {
     (void)fprintf(stderr, "linked_list_push failed: %s\n",
                   ll_errcode_string(rc));
+    linked_list_destroy(list);
+    return EXIT_FAILURE;
   }
 
   int64_t value;
@@ -152,8 +185,6 @@ int main(void) {
   }
   linked_list_print(list);
 
-  linked_list_free(list);
-  free(list);
-
+  linked_list_destroy(list);
   return EXIT_SUCCESS;
 }
