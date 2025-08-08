@@ -24,7 +24,7 @@ CFLAGS_DEBUG    ?= -g -O0 -DDEBUG
 CFLAGS_RELEASE  ?= \
 	-O3 -DNDEBUG -march=native -mtune=native -flto \
 	-ffunction-sections -fdata-sections 
-# -D_FORTIFY_SOURCE=3 -Wno-used-but-marked-unused
+# -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -Wno-used-but-marked-unused
 #-ffast-math -fno-math-errno #-funroll-loops #-fipa-pta # -fbranch-target-load-optimize #gcc: -fno-schedule-insns2
 
 CFLAGS_COMMON ?= \
@@ -36,19 +36,19 @@ CFLAGS_COMMON ?= \
     -Wshadow -Wconversion -Wsign-conversion -Wstrict-prototypes -Wold-style-definition -Wfloat-equal \
     -Wdouble-promotion -Wcast-qual -Wpointer-arith -Wredundant-decls -Wwrite-strings -Wtype-limits -Wundef \
     -Wempty-body -Wdisabled-optimization -Wnull-dereference -Wvla -Wformat=2 \
-    -Wimplicit-fallthrough \
-    -Werror=format-security \
+    -Wimplicit-fallthrough -Wcast-align -Wunused -Wstack-protector \
+    -fno-common -Walloca \
+    -Werror=format-security -Werror=incompatible-pointer-types \
     \
     -Wno-unsafe-buffer-usage -Wno-declaration-after-statement -Wno-conditional-uninitialized \
     -Wno-covered-switch-default
 # gcc: -fanalyzer -Wduplicated-cond -Wduplicated-branches
-# NOTE: here -f flags could load CPU
 
 
-LDFLAGS_BASE    = -pie
-LDFLAGS_RELEASE = -flto -fuse-ld=lld -Wl,--gc-sections -Wl,-z,nodlopen -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -Wl,--no-copy-dt-needed-entries
-LDFLAGS_DEBUG   = 
-LDFLAGS         = $(LDFLAGS_BASE)
+LDFLAGS_COMMON  = -pie -Wl,-z,nodlopen -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -Wl,--no-copy-dt-needed-entries
+LDFLAGS_RELEASE = -flto -fuse-ld=lld -Wl,--gc-sections
+LDFLAGS_DEBUG   = -fuse-ld=lld
+LDFLAGS         = $(LDFLAGS_COMMON)
 ifeq ($(BUILD),release)
     LDFLAGS += $(LDFLAGS_RELEASE)
 else
@@ -61,6 +61,7 @@ CFLAGS_COMMON += -DPROJECT_VERSION=\"$(VERSION)\"
 SAN_FLAGS :=
 ifeq ($(BUILD),debug)
   SANITIZE ?= address,undefined
+# ,leak,thread
   ifneq ($(SANITIZE),)
     SAN_FLAGS := -fsanitize=$(SANITIZE) -fno-omit-frame-pointer
   endif
