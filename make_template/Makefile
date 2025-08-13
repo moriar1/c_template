@@ -4,6 +4,7 @@ MAKEFLAGS += --no-print-directory
 
 # ========================== Project Configuration ===========================
 
+ARGS         ?=
 SRC_DIR      ?= src
 INCLUDE_DIR  ?= include
 SRCS         := $(shell find $(SRC_DIR) -name '*.c')
@@ -28,10 +29,11 @@ CFLAGS_RELEASE  ?= \
 #-ffast-math -fno-math-errno #-funroll-loops #-fipa-pta # -fbranch-target-load-optimize #gcc: -fno-schedule-insns2
 
 CFLAGS_COMMON ?= \
+	-D_POSIX_C_SOURCE=200112L \
     -fPIE -std=c17 -I$(INCLUDE_DIR) -fcolor-diagnostics \
-    -fcf-protection -fstack-clash-protection -fstack-protector-strong -fstrict-flex-arrays=3 \
+    -fcf-protection -fstack-clash-protection -fstrict-flex-arrays=3 \
     \
-	-Weverything -Werror \
+	-Weverything \
     -Wall -Wextra -Wmissing-prototypes -Wpedantic \
     -Wshadow -Wconversion -Wsign-conversion -Wstrict-prototypes -Wold-style-definition -Wfloat-equal \
     -Wdouble-promotion -Wcast-qual -Wpointer-arith -Wredundant-decls -Wwrite-strings -Wtype-limits -Wundef \
@@ -41,7 +43,8 @@ CFLAGS_COMMON ?= \
     -Werror=format-security -Werror=incompatible-pointer-types \
     \
     -Wno-unsafe-buffer-usage -Wno-declaration-after-statement -Wno-conditional-uninitialized \
-    -Wno-covered-switch-default
+    -Wno-covered-switch-default -Wno-cast-align \
+    # -Werror 
 # gcc: -fanalyzer -Wduplicated-cond -Wduplicated-branches
 
 
@@ -177,14 +180,14 @@ rebuild: clean all run           ## Full clean build
 run: run-debug                   ## Build and run (debug)
 run-debug: debug                 ## Build (debug) and run it
 #@printf "$(BRIGHT_WHITE)[RUN]$(RESET) Running debug binary: %s$(RESET)\n" "$(BIN_OUTPUT)"
-	@LD_LIBRARY_PATH=$(LD_LIBRARY_PATH_EXTRA):$$LD_LIBRARY_PATH $(BIN_OUTPUT)
+	@LD_LIBRARY_PATH=$(LD_LIBRARY_PATH_EXTRA):$$LD_LIBRARY_PATH $(BIN_OUTPUT) $(ARGS)
 
 run-release: release             ## Build (release) and run it
 #@printf "$(BRIGHT_WHITE)[RUN]$(RESET) Running release binary: %s\n" "$(BIN_OUTPUT)"
-	$(Q)$(MAKE) BUILD=release run-internal
+	$(Q)$(MAKE) BUILD=release run-internal ARGS="$(ARGS)"
 
 run-internal:
-	@LD_LIBRARY_PATH=$(LD_LIBRARY_PATH_EXTRA):$$LD_LIBRARY_PATH $(BIN_OUTPUT)
+	@LD_LIBRARY_PATH=$(LD_LIBRARY_PATH_EXTRA):$$LD_LIBRARY_PATH $(BIN_OUTPUT) $(ARGS)
 
 # ========================== Testing =========================================
 
