@@ -7,60 +7,51 @@ MAKEFLAGS += --no-print-directory
 ARGS         ?=
 SRC_DIR      ?= src
 INCLUDE_DIR  ?= include
-SRCS         := $(shell find $(SRC_DIR) -name '*.c')
-HEADERS      := $(shell find $(INCLUDE_DIR) -name '*.h')
-
-CC           ?= clang
 TARGET       ?= myapp
 BUILD        ?= debug
+INSTALL_DIR  ?= $(HOME)/.local/bin
+CC           ?= clang
 
+# --- Paths ---
 BUILD_ROOT   ?= build
 OBJ_DIR      := $(BUILD_ROOT)/$(BUILD)/obj
 BIN_DIR      := $(BUILD_ROOT)/$(BUILD)/bin
 OBJ_SUBDIR   := $(OBJ_DIR)
 BIN_OUTPUT   := $(BIN_DIR)/$(TARGET)
-INSTALL_DIR  ?= $(HOME)/.local/bin
 
-CFLAGS_DEBUG    ?= -g -O0 -DDEBUG
-CFLAGS_RELEASE  ?= \
-	-O3 -DNDEBUG -march=native -mtune=native -flto \
-	-ffunction-sections -fdata-sections 
-# -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -Wno-used-but-marked-unused
-#-ffast-math -fno-math-errno #-funroll-loops #-fipa-pta # -fbranch-target-load-optimize #gcc: -fno-schedule-insns2
+# --- Source Files ---
+SRCS         := $(shell find $(SRC_DIR) -name '*.c')
+HEADERS      := $(shell find $(INCLUDE_DIR) -name '*.h')
 
+# --- Compiler Flags ---
 CFLAGS_COMMON ?= \
-	-D_POSIX_C_SOURCE=200112L \
-    -fPIE -std=c17 -I$(INCLUDE_DIR) -fcolor-diagnostics \
-    -fcf-protection -fstack-clash-protection -fstrict-flex-arrays=3 \
+	-std=c17 -D_POSIX_C_SOURCE=200112L -I$(INCLUDE_DIR) -fcolor-diagnostics \
+    -fPIE -fcf-protection -fstack-clash-protection -fstrict-flex-arrays=3 \
     \
-	-Weverything \
-    -Wall -Wextra -Wmissing-prototypes -Wpedantic \
-    -Wshadow -Wconversion -Wsign-conversion -Wstrict-prototypes -Wold-style-definition -Wfloat-equal \
+	-Weverything -Wall -Wextra -Wpedantic \
+    -Wmissing-prototypes -Wshadow -Wconversion -Wsign-conversion -Wstrict-prototypes -Wold-style-definition -Wfloat-equal \
     -Wdouble-promotion -Wcast-qual -Wpointer-arith -Wredundant-decls -Wwrite-strings -Wtype-limits -Wundef \
-    -Wempty-body -Wdisabled-optimization -Wnull-dereference -Wvla -Wformat=2 \
-    -Wimplicit-fallthrough -Wcast-align -Wunused -Wstack-protector \
-    -fno-common -Walloca \
+    -Wempty-body -Wdisabled-optimization -Wnull-dereference -Wvla -Wformat=2 -Wimplicit-fallthrough -Wcast-align \
+    -Wunused -Wstack-protector -Walloca -fno-common \
     -Werror=format-security -Werror=incompatible-pointer-types \
     \
     -Wno-unsafe-buffer-usage -Wno-declaration-after-statement -Wno-conditional-uninitialized \
     -Wno-covered-switch-default -Wno-cast-align \
     # -Werror 
-# gcc: -fanalyzer -Wduplicated-cond -Wduplicated-branches
 
+CFLAGS_DEBUG    ?= -O0 -DDEBUG -g
+CFLAGS_RELEASE  ?= -O3 -DNDEBUG -march=native -mtune=native -flto -ffunction-sections -fdata-sections 
 
-LDFLAGS_COMMON  = -pie -Wl,-z,nodlopen -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -Wl,--no-copy-dt-needed-entries
-LDFLAGS_RELEASE = -flto -fuse-ld=lld -Wl,--gc-sections
-LDFLAGS_DEBUG   = -fuse-ld=lld
-LDFLAGS         = $(LDFLAGS_COMMON)
-ifeq ($(BUILD),release)
-    LDFLAGS += $(LDFLAGS_RELEASE)
-else
-    LDFLAGS += $(LDFLAGS_DEBUG)
-endif
+# --- Link Flags ---
+LDFLAGS_COMMON  = -pie -fuse-ld=lld -Wl,-z,nodlopen -Wl,-z,noexecstack -Wl,-z,relro -Wl,-z,now -Wl,--as-needed -Wl,--no-copy-dt-needed-entries
+LDFLAGS_RELEASE = -flto -Wl,--gc-sections
+LDFLAGS_DEBUG   =
 
+# --- Version ---
 VERSION := $(shell git describe --tags --always 2>/dev/null || echo "unknown")
 CFLAGS_COMMON += -DPROJECT_VERSION=\"$(VERSION)\"
 
+# --- Sanitizers ---
 SAN_FLAGS :=
 ifeq ($(BUILD),debug)
   SANITIZE ?= address,undefined
@@ -70,13 +61,15 @@ ifeq ($(BUILD),debug)
   endif
 endif
 
+# --- Flags Combination Logic ---
 CFLAGS := $(CFLAGS_COMMON)
 ifeq ($(BUILD),release)
 	CFLAGS += $(CFLAGS_RELEASE)
+	LDFLAGS = $(LDFLAGS_COMMON) $(LDFLAGS_RELEASE)
 else
 	CFLAGS += $(CFLAGS_DEBUG)
+	LDFLAGS = $(LDFLAGS_COMMON) $(LDFLAGS_DEBUG)
 endif
-
 LDFLAGS += $(SAN_FLAGS)
 
 OBJS     := $(patsubst $(SRC_DIR)/%.c, $(OBJ_SUBDIR)/%.o, $(SRCS))
@@ -317,3 +310,10 @@ help:                           ## Print this help message
 	@printf "\n"
 
 .DELETE_ON_ERROR:
+
+# == EXTRA FLAGS ==
+# CFLAGS_RELEASE: # cause problems: -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -Wno-used-but-marked-unused # not recomended: -ffast-math -fno-math-errno #-funroll-loops #-fipa-pta # -fbranch-target-load-optimize #gcc: -fno-schedule-insns2
+# CFLAGS_COMMON: #gcc: -fanalyzer -Wduplicated-cond -Wduplicated-branches 
+# --- Link Flags (TODO: test) ---
+# LDFLAGS_COMMON: -Wl,-z,defs -Wl,--build-id -Wl,--icf=all # -Wl,-z,noextern -Wl,--warn-unresolved-symbols -static-pie
+# LDFLAGS_RELEASE = -Wl,--strip-debug
