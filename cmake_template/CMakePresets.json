@@ -40,33 +40,6 @@
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "CMAKE_C_COMPILER": "clang"
       }
-    },
-    {
-      "name": "gcc-debug",
-      "inherits": "base",
-      "description": "Debug build with GCC",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_C_COMPILER": "gcc"
-      }
-    },
-    {
-      "name": "gcc-release",
-      "inherits": "base",
-      "description": "Release build with GCC",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_C_COMPILER": "gcc"
-      }
-    },
-    {
-      "name": "gcc-relwithdebinfo",
-      "inherits": "base",
-      "description": "RelWithDebInfo build with GCC",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_C_COMPILER": "gcc"
-      }
     }
   ],
   "buildPresets": [    {
@@ -80,18 +53,6 @@
     {
       "name": "clang-relwithdebinfo",
       "configurePreset": "clang-relwithdebinfo"
-    },
-    {
-      "name": "gcc-debug",
-      "configurePreset": "gcc-debug"
-    },
-    {
-      "name": "gcc-release",
-      "configurePreset": "gcc-release"
-    },
-    {
-      "name": "gcc-relwithdebinfo",
-      "configurePreset": "gcc-relwithdebinfo"
     }
   ]
 }

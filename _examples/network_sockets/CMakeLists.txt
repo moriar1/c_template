@@ -7,7 +7,7 @@ project(
   LANGUAGES C)
 
 # ---- Sources and Includes ----
-set(SOURCES src/main.c)
+set(SOURCES src/main.c src/mynetwork.c)
 add_executable(${PROJECT_NAME} ${SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 # file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.c)
@@ -56,7 +56,7 @@ set(COMMON_CLANG_FLAGS
     -Wtype-limits
     -Wundef
     -Wunused
-    -Wcast-align
+    # -Wcast-align
     -Wstack-protector
     -Walloca
     -Wimplicit-fallthrough
@@ -68,6 +68,7 @@ set(COMMON_CLANG_FLAGS
     -Werror=format-security
     -Werror=incompatible-pointer-types
     # Disable specific warnings (if -Weveryting is on)
+    -Wno-cast-align
     -Wno-unsafe-buffer-usage
     -Wno-declaration-after-statement
     -Wno-conditional-uninitialized

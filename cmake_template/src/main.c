@@ -127,6 +127,7 @@ static void linked_list_print(LinkedList const *list) {
 }
 
 int main(void) {
+  printf("Version: %s\n", PROJECT_VERSION);
   errno = 0;
   LinkedList *const list = linked_list_new();
   if (!list) {

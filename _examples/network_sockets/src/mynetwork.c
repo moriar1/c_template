@@ -1,3 +1,4 @@
+#include "mynetwork.h"
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <netinet/in.h>
@@ -7,9 +8,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
-
-#define PORT "80"
-#define MAXDATASIZE 4096
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa) {
@@ -82,7 +80,8 @@ int send_http_get(int sockfd, const char hostname[static 1],
   }
 
   for (; total_sent < len; total_sent += bytes_sent) {
-    bytes_sent = send(sockfd, request + total_sent, len - total_sent, 0);
+    bytes_sent =
+        send(sockfd, request + total_sent, (size_t)(len - total_sent), 0);
     if (bytes_sent < 0) {
       perror("send");
       return -1;
@@ -114,7 +113,8 @@ int send_http_post(int sockfd, const char hostname[static 1],
   }
 
   for (; total_sent < len; total_sent += bytes_sent) {
-    bytes_sent = send(sockfd, request + total_sent, len - total_sent, 0);
+    bytes_sent =
+        send(sockfd, request + total_sent, (size_t)(len - total_sent), 0);
     if (bytes_sent < 0) {
       perror("send");
       return -1;
@@ -142,30 +142,4 @@ int recv_response(int sockfd) {
     }
   }
   return 0;
-}
-
-int main(void) {
-  const char hostname[] = "example.net";
-  const char path[] = "/";
-  int sockfd = get_connection_socket(hostname);
-  int status = 0;
-
-  if (sockfd < 0) {
-    fprintf(stderr, "Failed to establish connection.\n");
-    return 1;
-  }
-
-  if (send_http_get(sockfd, hostname, path) != 0) {
-    status = 1;
-    goto cleanup;
-  }
-
-  if (recv_response(sockfd) != 0) {
-    status = 1;
-    goto cleanup;
-  }
-
-cleanup:
-  close(sockfd);
-  return status;
 }

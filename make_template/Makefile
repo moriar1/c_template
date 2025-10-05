@@ -1,5 +1,3 @@
-# https://clang.llvm.org/docs/UsersManual.html
-# https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html
 MAKEFLAGS += --no-print-directory
 
 # ========================== Project Configuration ===========================
