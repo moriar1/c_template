@@ -14,7 +14,8 @@ Diagnostics:
       "cert-err33-c",
       "altera-unroll-loops",
       "readability-isolate-declaration",
-      "bugprone-easily-swappable-parameters"
+      "bugprone-easily-swappable-parameters",
+      "google-readability-todo"
       #"fuchsia-*",
       #"android-*",
       #"zircon-*",
