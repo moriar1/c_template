@@ -72,6 +72,7 @@ set(COMMON_CLANG_FLAGS
     -Wno-declaration-after-statement
     -Wno-conditional-uninitialized
     -Wno-covered-switch-default)
+# -ansi
 
 # ---- Common Linker Flags ----
 set(COMMON_LINK_FLAGS

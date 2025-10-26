@@ -15,7 +15,8 @@ Diagnostics:
       "altera-unroll-loops",
       "readability-isolate-declaration",
       "bugprone-easily-swappable-parameters",
-      "google-readability-todo"
+      "google-readability-todo",
+      "android-cloexec-open"
       #"fuchsia-*",
       #"android-*",
       #"zircon-*",
