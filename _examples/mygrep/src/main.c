@@ -1,3 +1,7 @@
+#ifdef __linux__
+#define _GNU_SOURCE
+#endif
+
 #include <getopt.h>
 #include <stdbool.h>
 #include <stdio.h>

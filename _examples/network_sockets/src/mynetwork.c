@@ -1,3 +1,7 @@
+#ifdef __linux__
+#define _GNU_SOURCE
+#endif
+
 #include "mynetwork.h"
 #include <arpa/inet.h>
 #include <netdb.h>
