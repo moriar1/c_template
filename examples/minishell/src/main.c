@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <err.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -17,33 +18,63 @@ static void parse_exec_args(char *args_buf[], char *input) {
     }
   }
   // Last arg is NULL, since definition is `args[] = {0}`
-  // No need: args_buf[MAX_ARGS] = (char *)0;
+  // But just in case
+  args_buf[MAX_ARGS] = (char *)0;
+}
+
+static char *trim(char *str) {
+  // leading whitespaces
+  while (isspace(*(str))) {
+    str++;
+  }
+  if (*str == 0) {
+    return str;
+  }
+
+  // trailing whitespaces
+  char *endp = str + strlen(str);
+  while (isspace(*(endp - 1))) {
+    endp--;
+  }
+  *endp = 0;
+
+  return str;
 }
 
 // TODO:
 // https://stackoverflow.com/questions/17982633/lightweight-gnu-readline-alternative
-// trim input
 // pipes
+// remove double spaces
+// standard comands and symbols: exit, cd, ~, >, |, \, alias, vars
+// check stdout, stderr, stdin after fork
 int main(void) {
   char input[BUFSIZ];
   fputs("% ", stdout);
   pid_t pid;
 
   while (fgets(input, BUFSIZ, stdin)) {
+    // Trim input string
     size_t last_pos = strlen(input) - 1;
     if (input[last_pos] == '\n') {
       input[last_pos] = 0;
     }
+    char *input_ = trim(input);
+    if (*input_ == 0) {
+      fputs("% ", stdout);
+      continue;
+    }
+
+    // Start new process
     if ((pid = fork()) < 0) {
       err(1, "fork err");
     } else if (pid == 0) { // Child
       char *args[MAX_ARGS + 1] = {0};
 
-      parse_exec_args(args, input);
-      if (execvp(input, args) == -1) {
-        err(2, "exec err (buffer contains: %s)", input);
+      parse_exec_args(args, input_);
+      if (execvp(input_, args) == -1) {
+        err(2, "exec err (buffer contains `%s`)", input_);
+        // exit(127);
       }
-      exit(127);
     }
 
     if (waitpid(pid, NULL, 0) < 0) { // Parent

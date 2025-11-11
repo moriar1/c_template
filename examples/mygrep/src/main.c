@@ -57,10 +57,14 @@ static cli_args parse_args(int argc, char *argv[]) {
 
 int main(int argc, char *argv[]) {
   cli_args args = parse_args(argc, argv);
+  const size_t pattern_len = strlen(args.pattern);
+
+  if (pattern_len == 0) {
+    args.no_color = true;
+  }
 
   char *(*strstr_func)(const char *, const char *) =
       args.ignore_case ? strcasestr : strstr;
-  const size_t pattern_len = strlen(args.pattern);
 
   char *line = NULL;
   size_t linecap = 0;
