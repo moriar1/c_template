@@ -180,3 +180,16 @@ endif()
 
 # ---- Install ----
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+
+# ---- clang-tidy ----
+file(GLOB_RECURSE SOURCE_FILES
+    CONFIGURE_DEPENDS
+    "src/*.c"
+    "include/*.h"
+)
+
+add_custom_target(run-tidy-manual
+    COMMAND clang-tidy -p ${CMAKE_BINARY_DIR} ${SOURCE_FILES}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Running clang-tidy manually on source files"
+)

@@ -1,3 +1,3 @@
 #include <stdio.h>
 
-int main(void) { return puts("Hello, world!") == EOF; }
+int main(void) { return printf("Hello%s, world!") == EOF; }
