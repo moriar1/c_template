@@ -24,23 +24,26 @@ set_target_properties(
 target_compile_definitions(${PROJECT_NAME}
                            PRIVATE PROJECT_VERSION=\"${PROJECT_VERSION}\")
 
+# Add POSIX functions for Linux
+target_compile_definitions(
+  ${PROJECT_NAME} PRIVATE $<$<PLATFORM_ID:Linux>:_POSIX_C_SOURCE=200809L>)
+
 # ---- Compiler Hardening and Warning Flags ----
-set(COMMON_CLANG_FLAGS
+
+# Flags for GCC and Clang (release and debug)
+set(COMMON_FLAGS
     # Security and Safety
     -fPIE
-    -fcolor-diagnostics # gcc incompatible
     -fcf-protection
-    -fstack-clash-protection
+    -fcf-protection=full
     -fstack-protector-strong # -all
+    -fstack-clash-protection
     -fstrict-flex-arrays=3
     -fno-common
-    # Warning and style checks:
-    -Weverything # gcc incompatible
+    # Warning and style checks
     -Wall
     -Wextra
     -Wpedantic
-    -Werror
-    # if -Weverything is off
     -Wmissing-prototypes
     -Wstrict-prototypes
     -Wold-style-definition
@@ -64,15 +67,29 @@ set(COMMON_CLANG_FLAGS
     -Wformat=2
     -Wformat-signedness
     -Wstrict-overflow=2
-    # Security as errors (if -Werror if off)
+    # -Wjump-misses-init
+    -Wswitch-enum
+    -Wmissing-include-dirs
+    # Security as errors -Werror
     -Werror=format-security
-    -Werror=incompatible-pointer-types
-    # Disable specific warnings (if -Weveryting is on)
+    -Werror=incompatible-pointer-types)
+
+set(CLANG_ONLY_FLAGS
+    -fcolor-diagnostics
+    -Wunreachable-code-aggressive
+    -Wgnu-zero-variadic-macro-arguments
+    # -Wthread-safety
+    -Weverything
     -Wno-unsafe-buffer-usage
     -Wno-declaration-after-statement
     -Wno-conditional-uninitialized
-    -Wno-covered-switch-default)
-# -ansi
+    -Wno-covered-switch-default
+    -Wno-disabled-macro-expansion)
+
+set(GCC_ONLY_FLAGS
+    -fdiagnostics-color=always
+    # -fanalyzer # FIXME: No need in release build -ftrivial-auto-var-init=zero
+    -Wstringop-overflow=4 -Wduplicated-cond -Wduplicated-branches -Wlogical-op)
 
 # ---- Common Linker Flags ----
 set(COMMON_LINK_FLAGS
@@ -83,8 +100,13 @@ set(COMMON_LINK_FLAGS
     -Wl,--as-needed
     -Wl,--no-copy-dt-needed-entries
     -Wl,-z,nodlopen
-    -fuse-ld=lld
     -Wl,-z,defs)
+# Use lld linker if present.
+include(CheckLinkerFlag)
+check_linker_flag(C "-fuse-ld=lld" HAVE_LLD_LINKER)
+if(HAVE_LLD_LINKER)
+  list(APPEND COMMON_LINK_FLAGS "-fuse-ld=lld")
+endif()
 
 # ---- Configuration: Release, Debug, RelWithDebInfo ----
 set(DEBUG_FLAGS -g -O0 -DDEBUG)
@@ -97,9 +119,7 @@ set(RELEASE_FLAGS
     -mtune=native
     -flto
     -ffunction-sections
-    -fdata-sections
-    # -D_FORTIFY_SOURCE=3
-)
+    -fdata-sections)
 set(RELEASE_LINK_FLAGS -flto -Wl,--gc-sections)
 
 set(RELWITHDEBINFO_FLAGS
@@ -110,18 +130,20 @@ set(RELWITHDEBINFO_FLAGS
     -mtune=native
     -flto
     -ffunction-sections
-    -fdata-sections
-    # -D_FORTIFY_SOURCE=3
-)
+    -fdata-sections)
 set(RELWITHDEBINFO_LINK_FLAGS ${RELEASE_LINK_FLAGS})
 
 set(SANITIZER_FLAGS -fsanitize=address -fsanitize=undefined
                     -fno-omit-frame-pointer)
 
+# ---- Apply Compiler and Linker Flags ----
 # TODO?: use INTERFACE libraries for many targets
 target_compile_options(
   ${PROJECT_NAME}
-  PRIVATE ${COMMON_CLANG_FLAGS} $<$<CONFIG:Release>:${RELEASE_FLAGS}>
+  PRIVATE $<$<C_COMPILER_ID:GNU>:${GCC_ONLY_FLAGS}>
+          $<$<C_COMPILER_ID:Clang>:${CLANG_ONLY_FLAGS}>
+          ${COMMON_FLAGS}
+          $<$<CONFIG:Release>:${RELEASE_FLAGS}>
           $<$<CONFIG:Debug>:${DEBUG_FLAGS}>
           $<$<CONFIG:RelWithDebInfo>:${RELWITHDEBINFO_FLAGS}>)
 
@@ -133,6 +155,11 @@ target_link_options(
   $<$<CONFIG:Debug>:${DEBUG_LINK_FLAGS}>
   $<$<CONFIG:RelWithDebInfo>:${RELWITHDEBINFO_LINK_FLAGS}>)
 
+# ---- Fortify Source ----
+# target_compile_definitions(${PROJECT_NAME} PRIVATE
+# $<$<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>:_FORTIFY_SOURCE=3> )
+
+# ---- Sanitizers ----
 option(ENABLE_SANITIZERS
        "Enable address,undefined behavior sanitizers in Debug/RelWithDebInfo"
        ON)
@@ -145,9 +172,11 @@ if(ENABLE_SANITIZERS)
     $<$<CONFIG:RelWithDebInfo>:${SANITIZER_FLAGS}>)
 endif()
 
-# ---- Threading lib ----
-find_package(Threads REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads)
+# ---- Libraries ----
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  find_package(Threads REQUIRED)
+  target_link_libraries(${PROJECT_NAME} PRIVATE Threads::Threads m)
+endif()
 
 # ---- Install ----
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
