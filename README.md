@@ -38,9 +38,15 @@ cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_C_COMPI
 make
 ./MyProject
 
-# Optional
+# Optional:
 cd ..
+
+# for clangd
 ln -s build/compile_commands.json .
+
+# custom targets
+cmake --build build --target run-tidy-manual
+cmake --build build --target build-info
 ```
 
 # TODO
@@ -50,8 +56,9 @@ ln -s build/compile_commands.json .
 - clang-tidy: https://github.com/jenisys/explore.clang-tidy
 - other os examples
 - FetchContent example
-- targets: format, doc, uninstall, check
+- targets: format, doc, uninstall
 - CTest
+- CI/CD
 
 https://habr.com/ru/companies/pvs-studio/articles/708138/
 
@@ -72,12 +79,3 @@ https://github.com/cginternals/cmake-init
 https://clang.llvm.org/docs/UsersManual.html
 
 https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html
-
-### gcc
-```cmake
-if(CMAKE_C_COMPILER_ID MATCHES "Clang")
-target_compile_options(${PROJECT_NAME} PRIVATE -fcolor-diagnostics
--Weverything) elseif(CMAKE_C_COMPILER_ID MATCHES "GNU")
-target_compile_options(${PROJECT_NAME} PRIVATE -fdiagnostics-color=always)
-endif()
-```
