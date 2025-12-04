@@ -18,5 +18,6 @@ Checks: >
   -cppcoreguidelines-avoid-non-const-global-variables,
   -android-cloexec-open,
   -readability-function-cognitive-complexit",
-  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  "clang-diagnostic-implicit-void-ptr-cast"
 UseColor: true

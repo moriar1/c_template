@@ -17,4 +17,6 @@ include(ProjectLibraries)
 include(CustomTargets)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+# Unistall: run from `build` directory: `sudo xargs rm < install_manifest.txt`
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

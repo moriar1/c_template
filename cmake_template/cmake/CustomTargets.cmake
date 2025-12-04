@@ -1,35 +1,3 @@
-# ---- clang-tidy ----
-
-# Option `-DCMAKE_C_CLANG_TIDY=clang-tidy` for run clang-tidy when building
-if(CMAKE_C_CLANG_TIDY)
-  message(STATUS "Incremental clang-tidy is ENABLED for all C targets.")
-endif()
-
-# Full analysis target
-find_program(CLANG_TIDY_EXE "clang-tidy")
-if(NOT CLANG_TIDY_EXE)
-  message(
-    WARNING
-      "clang-tidy not found. Full analysis target 'run-tidy-full' will not be created."
-  )
-  return()
-endif()
-
-file(GLOB_RECURSE ALL_PROJECT_SOURCE_FILES CONFIGURE_DEPENDS
-     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
-     ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
-
-add_custom_target(
-  run-tidy-full
-  COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${PROJECT_NAME}
-  COMMAND ${CLANG_TIDY_EXE} -p ${CMAKE_BINARY_DIR} ${ALL_PROJECT_SOURCE_FILES}
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-  COMMENT "Running full clang-tidy analysis on all source files..."
-  VERBATIM # for files with spaces
-)
-set_target_properties(run-tidy-full PROPERTIES FOLDER "Maintenance")
-message(STATUS "Full clang-tidy analysis target 'run-tidy-full' created.")
-
 # ---- build-info ----
 
 # Usage: cmake --build build --target build-info
@@ -56,3 +24,86 @@ message(STATUS \"======================================\")
 ")
 
 set_target_properties(build-info PROPERTIES FOLDER "Maintenance")
+
+# ---- clang-tidy ----
+
+# Full analysis target
+find_program(CLANG_TIDY_EXE "clang-tidy") # TODO: maybe clang-tidy19
+if(NOT CLANG_TIDY_EXE)
+  message(
+    WARNING
+      "clang-tidy not found. Full analysis target 'run-tidy-full' will not be created."
+  )
+else()
+  file(GLOB_RECURSE ALL_PROJECT_SOURCE_FILES CONFIGURE_DEPENDS
+       ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
+       ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
+
+  add_custom_target(
+    run-tidy-full
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target
+            ${PROJECT_NAME}
+    COMMAND ${CLANG_TIDY_EXE} -p ${CMAKE_BINARY_DIR} ${ALL_PROJECT_SOURCE_FILES}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Running full clang-tidy analysis on all source files..."
+    VERBATIM # for files with spaces
+  )
+  set_target_properties(run-tidy-full PROPERTIES FOLDER "Maintenance")
+  message(STATUS "Full clang-tidy analysis target 'run-tidy-full' created.")
+endif()
+
+# ---- clang-format ----
+
+find_program(CLANG_FORMAT_EXE "clang-format")
+if(NOT CLANG_FORMAT_EXE)
+  message(
+    WARNING
+      "clang-format not found. Format targets 'format' and 'check-format' will not be created."
+  )
+else()
+  file(
+    GLOB_RECURSE ALL_FORMAT_SOURCE_FILES CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h
+    # ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c
+  )
+
+  # Target for formatting the code
+  add_custom_target(
+    format
+    COMMAND ${CLANG_FORMAT_EXE} -i ${ALL_FORMAT_SOURCE_FILES}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Formatting all source files with clang-format..."
+    VERBATIM)
+
+  # Target to check the formatting of the code
+  add_custom_target(
+    check-format
+    COMMAND ${CLANG_FORMAT_EXE} --dry-run --Werror ${ALL_FORMAT_SOURCE_FILES}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Checking source files formatting with clang-format..."
+    VERBATIM)
+
+  set_target_properties(format PROPERTIES FOLDER "Maintenance")
+  set_target_properties(check-format PROPERTIES FOLDER "Maintenance")
+
+  message(STATUS "clang-format targets 'format' and 'check-format' created.")
+endif()
+
+# ---- cppcheck ----
+
+find_program(CPPCHECK_EXE "cppcheck")
+if(NOT CPPCHECK_EXE)
+  message(
+    WARNING "cppcheck not found. Target 'run-cppcheck' will not be created.")
+else()
+  add_custom_target(
+    run-cppcheck
+    COMMAND ${CPPCHECK_EXE} --enable=all --std=c17
+            --project=${CMAKE_BINARY_DIR}/compile_commands.json
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Running cppcheck static analysis..."
+    VERBATIM)
+  add_dependencies(run-cppcheck ${PROJECT_NAME})
+  set_target_properties(run-cppcheck PROPERTIES FOLDER "Maintenance")
+  message(STATUS "Cppcheck target 'run-cppcheck' created.")
+endif()

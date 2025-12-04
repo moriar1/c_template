@@ -33,32 +33,34 @@ git clone https://github.com/moriar1/c_template
 cp -ir c_template/cmake_template MyProject
 cd MyProject
 md build
-cd build
-cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_C_COMPILER=clang -DCMAKE_C_CLANG_TIDY=clang-tidy ..
-make
-./MyProject
+cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=1 -DCMAKE_C_COMPILER=clang -DCMAKE_C_CLANG_TIDY=clang-tidy -G Ninja -B build -S .
+cmake --build build
+./build/MyProject
 
 # Optional:
-cd ..
 
 # for clangd
 ln -s build/compile_commands.json .
 
 # custom targets
-cmake --build build --target run-tidy-manual
+cmake --build build --target run-tidy-full
 cmake --build build --target build-info
+cmake --build build --target check-format
+cmake --build build --target format
 ```
 
 # TODO
 
 ## Cmake
 
-- clang-tidy: https://github.com/jenisys/explore.clang-tidy
 - other os examples
 - FetchContent example
-- targets: format, doc, uninstall
+- targets: doc, uninstall
 - CTest
 - CI/CD
+- clang-tidy: https://github.com/jenisys/explore.clang-tidy
+
+https://gitlab.kitware.com/cmake/community/-/wikis/FAQ
 
 https://habr.com/ru/companies/pvs-studio/articles/708138/
 
