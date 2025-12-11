@@ -51,6 +51,7 @@ cmake --build build --target format
 
 # TODO
 
+
 ## Macros
 
 - Define debug output (see ./misc/custom.h): https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
@@ -125,6 +126,8 @@ or in C23 with errno in header
 
 #endif // DEBUG_H
 ```
+
+- Make malloc functions thread safe using queue, print logs when exit().
 
 ## Cmake
 
