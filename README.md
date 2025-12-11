@@ -53,8 +53,7 @@ cmake --build build --target format
 
 ## Macros
 
-- safe malloc
-- Define debug output: https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
+- Define debug output (see ./misc/custom.h): https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
 
 ```c
 #ifndef NDEBUG
@@ -128,6 +127,9 @@ or in C23 with errno in header
 ```
 
 ## Cmake
+
+- `find_package(LLVM REQUIRED CONFIG)`
+- `LLVM_PACKAGE_VERSION`
 
 - other os examples
 - FetchContent example
