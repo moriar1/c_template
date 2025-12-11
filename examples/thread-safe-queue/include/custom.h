@@ -1,7 +1,6 @@
 #ifndef CUSTOM_H
 #define CUSTOM_H
 
-#include <err.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,33 +63,29 @@ static inline void internal_free(void *ptr, const char *file, int line) {
 
 static inline void *debug_malloc(size_t size, const char *file, int line) {
   void *ptr = internal_malloc(size, file, line);
-  fprintf(stderr, "[DEBUG] %s:%d: Allocated %zu bytes at %p\n", file, line,
-          size, ptr);
+  // fprintf(stderr, "[DEBUG] %s:%d: Allocated %zu bytes at %p\n", file, line,
+  // size, ptr);
   return ptr;
 }
 
 static inline void *debug_calloc(size_t nmemb, size_t size, const char *file,
                                  int line) {
   void *ptr = internal_calloc(nmemb, size, file, line);
-  fprintf(
-      stderr,
-      "[DEBUG] %s:%d: Callocated %zu elements of %zu bytes (%zu total) at %p\n",
-      file, line, nmemb, size, nmemb * size, ptr);
+  // fprintf( stderr, "[DEBUG] %s:%d: Callocated %zu elements of %zu bytes (%zu
+  // total) at %p\n", file, line, nmemb, size, nmemb * size, ptr);
   return ptr;
 }
 
 static inline void *debug_realloc(void *old_ptr, size_t new_size,
                                   const char *file, int line) {
   void *ptr = internal_realloc(old_ptr, new_size, file, line);
-  fprintf(stderr,
-          "[DEBUG] %s:%d: Reallocated memory to %zu bytes (new ptr %p, old ptr "
-          "%p)\n",
-          file, line, new_size, ptr, old_ptr);
+  // fprintf(stderr, "[DEBUG] %s:%d: Reallocated memory to %zu bytes (new ptr
+  // %p, old ptr " "%p)\n", file, line, new_size, ptr, old_ptr);
   return ptr;
 }
 
 static inline void debug_free(void *ptr, const char *file, int line) {
-  fprintf(stderr, "[DEBUG] %s:%d: Freeing memory at %p\n", file, line, ptr);
+  // fprintf(stderr, "[DEBUG] %s:%d: Freeing memory at %p\n", file, line, ptr);
   internal_free(ptr, file, line);
 }
 
@@ -107,7 +102,7 @@ static inline void debug_free(void *ptr, const char *file, int line) {
 
 #else // Release build
 
-#define DEBUG_PRINT(fmt, ...) ((void)0)
+#define DEBUG_PRINTF(fmt, ...) ((void)0)
 #define DEBUG_PUTS(msg) ((void)0)
 
 #define MALLOC(size) internal_malloc(size, __FILE__, __LINE__)

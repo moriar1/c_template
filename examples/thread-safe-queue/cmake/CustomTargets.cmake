@@ -28,27 +28,13 @@ set_target_properties(build-info PROPERTIES FOLDER "Maintenance")
 # ---- clang-tidy ----
 
 # Full analysis target
-
-find_package(LLVM CONFIG)
-
-find_program(CLANG_TIDY_EXE
-  NAMES clang-tidy
-  PATHS ${LLVM_TOOLS_BINARY_DIR}
-  NO_DEFAULT_PATH
-)
-
-## or simple:
-# find_program( CLANG_TIDY_EXE
-#   NAMES clang-tidy clang-tidy21 clang-tidy20 clang-tidy19 clang-tidy18
-#   DOC "Path to clang-tidy executable")
-# if(NOT CLANG_TIDY_EXE)
-#   message( WARNING "clang-tidy not found. Full analysis target 'run-tidy-full' will not be created." )
-
+find_program(CLANG_TIDY_EXE "clang-tidy") # TODO: maybe clang-tidy19
 if(NOT CLANG_TIDY_EXE)
-  message(WARNING "clang-tidy not found in LLVM tools directory: ${LLVM_TOOLS_BINARY_DIR}")
+  message(
+    WARNING
+      "clang-tidy not found. Full analysis target 'run-tidy-full' will not be created."
+  )
 else()
-  message(STATUS "Found clang-tidy: ${CLANG_TIDY_EXE} (from LLVM ${LLVM_PACKAGE_VERSION})")
-
   file(GLOB_RECURSE ALL_PROJECT_SOURCE_FILES CONFIGURE_DEPENDS
        ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
        ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)

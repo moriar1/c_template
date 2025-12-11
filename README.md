@@ -131,8 +131,7 @@ or in C23 with errno in header
 
 ## Cmake
 
-- `find_package(LLVM REQUIRED CONFIG)`
-- `LLVM_PACKAGE_VERSION`
+- use `find_package(LLVM REQUIRED CONFIG)` `LLVM_PACKAGE_VERSION` in clang-foramt target
 
 - other os examples
 - FetchContent example
