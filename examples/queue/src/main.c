@@ -90,11 +90,11 @@ static int queue_pop(Queue *queue, int *data) {
     return -1;
   }
 
-  if (data == NULL) {
-    DEBUG_PUTS("data pointer is NULL");
-    pthread_mutex_unlock(&queue->mutex);
-    return -1;
-  }
+  // if (data == NULL) {
+  //   DEBUG_PUTS("data pointer is NULL");
+  //   pthread_mutex_unlock(&queue->mutex);
+  //   return -1;
+  // }
 
   Node *pop_node = queue->head;
   *data = pop_node->data;
