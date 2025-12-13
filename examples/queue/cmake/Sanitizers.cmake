@@ -5,7 +5,7 @@ option(ENABLE_SANITIZERS
 
 if(ENABLE_SANITIZERS)
   set(SANITIZER_FLAGS
-      -fsanitize=address -fsanitize=undefined -fno-omit-frame-pointer
+      -fsanitize=thread -fsanitize=undefined -fno-omit-frame-pointer
       -fsanitize=float-divide-by-zero -fsanitize=float-cast-overflow)
   # -fsanitize=shadow-call-stack #-fsanitize=thread
 

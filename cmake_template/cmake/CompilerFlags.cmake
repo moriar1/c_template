@@ -63,6 +63,8 @@ set(CLANG_FLAGS
     -Wthread-safety
     -Wthread-safety-beta
     -Weverything
+    -Wno-padded # struct padding
+    -Wno-implicit-void-ptr-cast # malloc etc.
     -Wno-unsafe-buffer-usage
     -Wno-declaration-after-statement
     -Wno-conditional-uninitialized
