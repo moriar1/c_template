@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "custom.h" // DEBUG_PUTS, safe MALLOC, etc.
+#include "custom.h" // DEBUG_PUTS, MALLOC and CALLOC are safe, etc.
 
 enum { NUM_THREADS = 3 };
 
@@ -37,32 +37,9 @@ typedef struct {
 } MyStruct;
 ///
 
-// TODO: check err checking correctness
 static ThreadPool *threadpool_init(unsigned nthreads) {
   ThreadPool *pool = CALLOC(1, sizeof(*pool));
   pool->threads_count = nthreads;
-  // pool->shutdown = false;
-  // pool->working_threads_count = 0;
-
-  // // `Queue`
-  // pool->head = NULL;
-  // pool->tail = NULL;
-  // pool->tasks_count = 0;
-
-  // #pragma unroll
-  for (unsigned i = 0; i < nthreads; i++) {
-    pthread_t thread;
-    if (pthread_create(&thread, NULL, threadpool_thread_run, pool) != 0) {
-      DEBUG_PUTS("err: pcreate");
-      goto cleanup_pool;
-    }
-    // Maybe no need in err checking
-    // Maybe detach is bad practise
-    if (pthread_detach(thread)) {
-      DEBUG_PUTS("err: pdetatch");
-      goto cleanup_pool;
-    }
-  }
 
   if (pthread_mutex_init(&pool->mutex, NULL) != 0) {
     DEBUG_PUTS("err: mutex_init");
@@ -76,9 +53,29 @@ static ThreadPool *threadpool_init(unsigned nthreads) {
     DEBUG_PUTS("err: wait cond_init");
     goto cleanup_cond_pushed_task;
   }
+  for (unsigned i = 0; i < nthreads; i++) {
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, threadpool_thread_run, pool) != 0) {
+      DEBUG_PUTS("err: pcreate");
+      goto cleanup_cond_wait;
+    }
+    // NOTE:
+    // Maybe no need in err checking
+    // Maybe detach is bad practise
+    // If some threads are allocated, but 1 thread got an error than some
+    // threads are dangling (fix it or use threads_count for succeed threads)
+    if (pthread_detach(thread)) {
+      DEBUG_PUTS("err: pdetatch");
+      goto cleanup_cond_wait;
+    }
+  }
 
   return pool;
 
+cleanup_cond_wait:
+  if (pthread_cond_destroy(&pool->cond_wait) != 0) {
+    DEBUG_PUTS("err: wait cond_destroy");
+  }
 cleanup_cond_pushed_task:
   if (pthread_cond_destroy(&pool->cond_task_available) != 0) {
     DEBUG_PUTS("err: pushed_task cond_destroy");
@@ -92,6 +89,7 @@ cleanup_pool:
   return NULL;
 }
 
+// NOTE: waits finishing tasks inside
 static int threadpool_destroy(ThreadPool *pool) {
   if (pool == NULL) {
     DEBUG_PUTS("threadpool is NULL, nothing to free");
@@ -122,8 +120,10 @@ static int threadpool_destroy(ThreadPool *pool) {
     DEBUG_PUTS("err: pushed_task cond_wait");
     goto err;
   }
+  FREE(pool);
   return 0;
 err:
+  // NOTE: no free for pool
   return -1;
 }
 
@@ -135,6 +135,7 @@ static int threadpool_push(ThreadPool *pool, void *(*func)(void *), void *arg) {
     return -1;
   }
 
+  // TODO: use batch alloc
   Task *new_node = MALLOC(sizeof(*new_node));
   new_node->next = NULL;
   new_node->func = func;
@@ -244,18 +245,20 @@ void threadpool_wait(ThreadPool *pool) {
     return;
   }
 
-  // printf("wait: wc=%zu,tc=%zu\n", pool->working_threads_count,
-  //        pool->threads_count);
   pthread_mutex_lock(&pool->mutex);
+  // TODO: simplify: while (tasks_count>0 || working_threads>0) and shutdown in
+  // destroy
   while ((!pool->shutdown && pool->working_threads_count != 0) ||
          (pool->shutdown && pool->threads_count != 0)) {
-    // printf("dsa");
     pthread_cond_wait(&pool->cond_wait, &pool->mutex);
   }
   pthread_mutex_unlock(&pool->mutex);
 }
 /// end
 
+// TODO: add tests
+// return MALLOC errs
+// add logs
 int main(void) {
   ThreadPool *thread_pool = threadpool_init(NUM_THREADS);
   if (thread_pool == NULL) {
@@ -263,14 +266,12 @@ int main(void) {
     return 1;
   }
 
-  while (true) {
-    char msg[] = "Hello";
-    MyStruct mystruct = {2, 3, msg};
-    threadpool_push(thread_pool, mystruct_sum_print, &mystruct);
-    char msg1[] = "Hello";
-    MyStruct mystruct1 = {1, 2, msg1};
-    threadpool_push(thread_pool, mystruct_sum_print, &mystruct1);
-    sleep(1);
-  }
+  char msg[] = "Hello";
+  MyStruct mystruct = {2, 3, msg};
+  threadpool_push(thread_pool, mystruct_sum_print, &mystruct);
+  char msg1[] = "Hello";
+  MyStruct mystruct1 = {1, 2, msg1};
+  threadpool_push(thread_pool, mystruct_sum_print, &mystruct1);
+  threadpool_wait(thread_pool);
   threadpool_destroy(thread_pool); // threadpool_wait is inside
 }

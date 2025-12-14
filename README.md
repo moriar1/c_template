@@ -128,6 +128,7 @@ or in C23 with errno in header
 ```
 
 - Make malloc functions thread safe using queue, print logs when exit().
+- Add or replace MALLOC with try_malloc and xmalloc
 
 ## Cmake
 

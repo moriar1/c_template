@@ -64,23 +64,27 @@ static inline void internal_free(void *ptr, const char *file, int line) {
 static inline void *debug_malloc(size_t size, const char *file, int line) {
   void *ptr = internal_malloc(size, file, line);
   // fprintf(stderr, "[DEBUG] %s:%d: Allocated %zu bytes at %p\n", file, line,
-  // size, ptr);
+  //         size, ptr);
   return ptr;
 }
 
 static inline void *debug_calloc(size_t nmemb, size_t size, const char *file,
                                  int line) {
   void *ptr = internal_calloc(nmemb, size, file, line);
-  // fprintf( stderr, "[DEBUG] %s:%d: Callocated %zu elements of %zu bytes (%zu
-  // total) at %p\n", file, line, nmemb, size, nmemb * size, ptr);
+  // fprintf(stderr,
+  //         "[DEBUG] %s:%d: Callocated %zu elements of %zu bytes (%zu total) at
+  //         "
+  //         "%p\n ",
+  //         file, line, nmemb, size, nmemb * size, ptr);
   return ptr;
 }
 
 static inline void *debug_realloc(void *old_ptr, size_t new_size,
                                   const char *file, int line) {
   void *ptr = internal_realloc(old_ptr, new_size, file, line);
-  // fprintf(stderr, "[DEBUG] %s:%d: Reallocated memory to %zu bytes (new ptr
-  // %p, old ptr " "%p)\n", file, line, new_size, ptr, old_ptr);
+  // fprintf(stderr,
+  //         "[DEBUG] %s:%d: Reallocated memory to %zu bytes (new ptr %p, old
+  //         ptr " " %p)\n ", file, line, new_size, ptr, old_ptr);
   return ptr;
 }
 
