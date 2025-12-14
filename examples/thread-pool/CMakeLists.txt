@@ -5,7 +5,7 @@ project(
   VERSION 0.1.0
   DESCRIPTION "C Project"
   LANGUAGES C)
-add_executable(${PROJECT_NAME} src/main.c)
+add_executable(${PROJECT_NAME} src/main.c src/threadpool.c)
 target_include_directories(${PROJECT_NAME} PRIVATE include)
 
 # ---- Configure Project ----

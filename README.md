@@ -129,6 +129,17 @@ or in C23 with errno in header
 
 - Make malloc functions thread safe using queue, print logs when exit().
 - Add or replace MALLOC with try_malloc and xmalloc
+- test WRAPPER for pthread_create
+```c
+#define DEFINE_THREAD_WRAPPER(func_name, data_type) \
+    void *func_name##_wrapper(void *arg) { \
+        data_type *data = (data_type *)arg; \
+        func_name(data); \
+        return NULL; \
+    }
+
+DEFINE_THREAD_WRAPPER(mystruct_sum_print_impl, MyStruct)
+```
 
 ## Cmake
 

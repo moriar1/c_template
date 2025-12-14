@@ -45,6 +45,7 @@ static inline void *internal_realloc(void *old_ptr, size_t new_size,
 }
 
 static inline void internal_free(void *ptr, const char *file, int line) {
+  // free(NULL) is acceptable, so maybe no need in this function
   if (ptr == NULL) {
     fprintf(stderr, "[FATAL] %s:%d: Freeing NULL ptr (errno: %s)\n", file, line,
             strerror(errno));
