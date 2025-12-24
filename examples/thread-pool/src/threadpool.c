@@ -1,5 +1,17 @@
-#include "custom.h" // DEBUG_PUTS, MALLOC and CALLOC are safe, etc.
+#include "custom.h" // DEBUG_PUTS, DEBUG_PRINTF
 #include "threadpool.h"
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// In case if "custom.h" isn't #included
+#ifndef DEBUG_PRINTF
+#define DEBUG_PRINTF(fmt, ...) ((void)0)
+#endif
+#ifndef DEBUG_PUTS
+#define DEBUG_PUTS(msg) ((void)0)
+#endif
 
 struct Task {
   void *arg;
@@ -8,10 +20,10 @@ struct Task {
 };
 
 struct ThreadPool {
-  Task *head;           // Head of tasks' queue
-  Task *tail;           // Tail of tasks' queue
-  size_t tasks_count;   // (queue_size) for detecting are there any work to do
-  size_t threads_count; // Check are there threads before shutdown
+  Task *head;                   // Head of tasks' queue
+  Task *tail;                   // Tail of tasks' queue
+  size_t tasks_count;           // (queue_size) usefull for debug
+  size_t alive_threads_count;   // Check are there threads before shutdown
   size_t working_threads_count; // Wait working threads
   pthread_mutex_t mutex;
   pthread_cond_t cond_task_available; // Signal about task been added in queue
@@ -20,8 +32,13 @@ struct ThreadPool {
 };
 
 ThreadPool *threadpool_init(unsigned nthreads) {
-  ThreadPool *pool = CALLOC(1, sizeof(*pool));
-  pool->threads_count = nthreads;
+  ThreadPool *pool = calloc(1, sizeof(*pool));
+  if (!pool) {
+    DEBUG_PRINTF("%s: pool calloc fail %s", __PRETTY_FUNCTION__,
+                 strerror(errno));
+    return NULL;
+  }
+  pool->alive_threads_count = nthreads;
 
   if (pthread_mutex_init(&pool->mutex, NULL) != 0) {
     DEBUG_PUTS("err: mutex_init");
@@ -67,7 +84,7 @@ cleanup_mutex:
     DEBUG_PUTS("err: mutex_destroy");
   }
 cleanup_pool:
-  FREE(pool);
+  free(pool);
   return NULL;
 }
 
@@ -102,7 +119,7 @@ int threadpool_destroy(ThreadPool *pool) {
     DEBUG_PUTS("err: pushed_task cond_wait");
     goto err;
   }
-  FREE(pool);
+  free(pool);
   return 0;
 
 err:
@@ -119,7 +136,12 @@ int threadpool_push(ThreadPool *pool, void (*func)(void *), void *arg) {
   }
 
   // TODO: use batch alloc
-  Task *new_node = MALLOC(sizeof(*new_node));
+  Task *new_node = malloc(sizeof(*new_node));
+  if (!new_node) {
+    DEBUG_PRINTF("%s: new_node malloc fail %s", __PRETTY_FUNCTION__,
+                 strerror(errno));
+    return -1;
+  }
   new_node->next = NULL;
   new_node->func = func;
   new_node->arg = arg;
@@ -169,12 +191,13 @@ void *threadpool_thread_run(void *arg) {
   ThreadPool *pool = arg;
   while (true) {
     pthread_mutex_lock(&pool->mutex);
-    while (pool->tasks_count == 0 && !pool->shutdown) {
+    while (pool->head == NULL && !pool->shutdown) {
       pthread_cond_wait(&pool->cond_task_available, &pool->mutex);
     }
-    if (pool->shutdown && pool->tasks_count == 0) {
-      pool->threads_count--; // `threadpool_wait()` waits for 0 threads_count
-      if (pool->threads_count == 0) {
+    if (pool->shutdown && pool->head == NULL) {
+      pool->alive_threads_count--; // `threadpool_wait()` waits for 0
+                                   // threads_count
+      if (pool->alive_threads_count == 0) {
         pthread_cond_broadcast(&pool->cond_wait);
       }
       pthread_mutex_unlock(&pool->mutex);
@@ -189,7 +212,7 @@ void *threadpool_thread_run(void *arg) {
 
     // Execute task
     task->func(task->arg);
-    FREE(task);
+    free(task);
 
     pthread_mutex_lock(&pool->mutex);
     pool->working_threads_count--;
@@ -204,7 +227,7 @@ void *threadpool_thread_run(void *arg) {
   return (void *)0;
 }
 
-// NOTE: may implement wait_idle which do not uses pool-shutdown, but waits
+// NOTE: may implement wait_idle which do not uses pool->shutdown, but waits
 // untill all tasks are finishes
 void threadpool_wait(ThreadPool *pool) {
   if (pool == NULL) {
@@ -213,10 +236,10 @@ void threadpool_wait(ThreadPool *pool) {
   }
 
   pthread_mutex_lock(&pool->mutex);
-  // TODO: simplify: while (tasks_count>0 || working_threads>0) and shutdown in
-  // destroy
+  // TODO: try simplify: while (tasks_count>0 || working_threads>0) and shutdown
+  // in destroy
   while ((!pool->shutdown && pool->working_threads_count != 0) ||
-         (pool->shutdown && pool->threads_count != 0)) {
+         (pool->shutdown && pool->alive_threads_count != 0)) {
     pthread_cond_wait(&pool->cond_wait, &pool->mutex);
   }
   pthread_mutex_unlock(&pool->mutex);

@@ -11,7 +11,7 @@
 
 ```sh
 sudo apt update && sudo apt upgrade -y
-sudo apt install -y git clang clangd clang-tidy clang-format cmake ninja-build build-essential
+sudo apt install -y git clang clangd clang-tidy clang-format llvm-19 cmake ninja-build build-essential
 ```
 
 # Usage
@@ -127,9 +127,18 @@ or in C23 with errno in header
 #endif // DEBUG_H
 ```
 
-- Make malloc functions thread safe using queue, print logs when exit().
+- Make malloc functions (fprintf) thread safe using queue, print logs when exit().
 - Add or replace MALLOC with try_malloc and xmalloc
+
+```c
+static inline void *try_malloc(size_t n) {
+    return malloc(n);
+}
+#define TRY_MALLOC(ptr, size) do { ptr = try_malloc(size); if (!ptr) return false; } while(0)
+```
+
 - test WRAPPER for pthread_create
+
 ```c
 #define DEFINE_THREAD_WRAPPER(func_name, data_type) \
     void *func_name##_wrapper(void *arg) { \
