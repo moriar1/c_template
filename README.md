@@ -14,6 +14,20 @@ sudo apt update && sudo apt upgrade -y
 sudo apt install -y git clang clangd clang-tidy clang-format llvm-19 cmake ninja-build build-essential
 ```
 
+**Arch Linux**:
+
+```sh
+sudo pacman -Syu
+sudo pacman -S git clang lld ninja cmake base-devel llvm20 
+```
+
+**FreeBSD**:
+
+```sh
+sudo pkg update && sudo pkg upgrade -y
+sudo pkg install -y git cmake ninja llvm21
+```
+
 # Usage
 
 ## CMakePresets
@@ -154,7 +168,6 @@ DEFINE_THREAD_WRAPPER(mystruct_sum_print_impl, MyStruct)
 
 - use `find_package(LLVM REQUIRED CONFIG)` `LLVM_PACKAGE_VERSION` in clang-foramt target
 
-- other os examples
 - FetchContent example
 - targets: doc, uninstall
 - CTest
