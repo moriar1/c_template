@@ -1,13 +1,15 @@
 # Requirements
 
 - Unix-like OS
-- git
 - clang
+- clang-format
+- clang-tidy
 - lld
+- git
 - ninja
 - cmake
 
-**Debian/Ubuntu**:
+**Debian**:
 
 ```sh
 sudo apt update && sudo apt upgrade -y
@@ -68,80 +70,8 @@ cmake --build build --target format
 
 ## Macros
 
-- Define debug output (see ./misc/custom.h): https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
-
-```c
-#ifndef NDEBUG
-
-// NOTE: always needs at least 1 arg (you can use NULL as dummy argument)
-#define DEBUG_PRINT(fmt, ...)                                                  \
-  do {                                                                         \
-    fprintf(stderr, "[DEBUG] %s:%d: " fmt "\n", __func__, __LINE__,            \
-            __VA_ARGS__);                                                      \
-  } while (0)
-#else
-
-#define DEBUG_PRINT(fmt, ...) ((void)0)
-
-#endif
-```
-
-or
-
-```c
-#ifndef NDEBUG
-
-#define DEBUG_PRINTF(fmt, ...)                                                 \
-  do {                                                                         \
-    fprintf(stderr, "[DEBUG] %s:%d: " fmt "\n", __func__, __LINE__,            \
-            __VA_ARGS__);                                                      \
-  } while (0)
-#define DEBUG_PUTS(msg)                                                        \
-  do {                                                                         \
-    fprintf(stderr, "[DEBUG] %s:%d: " msg "\n", __func__, __LINE__);           \
-  } while (0)
-#else
-
-#define DEBUG_PRINT(fmt, ...) ((void)0)
-#define DEBUG_PRINT_MSG(msg) ((void)0)
-
-#endif
-```
-
-or in C23 with errno in header
-
-```c
-#ifndef DEBUG_H
-#define DEBUG_H
-
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-
-#ifndef NDEBUG
-
-#define DEBUG_PRINT(fmt, ...)                                                  \
-  do {                                                                         \
-    fprintf(stderr, "[DEBUG] %s:%d: " fmt "\n", __func__,                      \
-            __LINE__ __VA_OPT__(, ) __VA_ARGS__);                              \
-  } while (0)
-
-#define DEBUG_PRINT_ERRNO(fmt, ...)                                            \
-  do {                                                                         \
-    fprintf(stderr, "[ERROR] %s:%d: " fmt " (errno: %s)\n", __func__,          \
-            __LINE__ __VA_OPT__(, ) __VA_ARGS__, strerror(errno));             \
-  } while (0)
-#else
-
-#define DEBUG_PRINT(fmt, ...) ((void)0)
-#define DEBUG_PRINT_ERRNO(fmt, ...) ((void)0)
-
-#endif // NDEBUG
-
-#endif // DEBUG_H
-```
-
-- Make malloc functions (fprintf) thread safe using queue, print logs when exit().
+(see ./misc/custom.h): https://stackoverflow.com/questions/1644868/define-macro-for-debug-printing-in-c
+- Make functions (fprintf) thread safe using queue, print logs when exit().
 - Add or replace MALLOC with try_malloc and xmalloc
 
 ```c
@@ -176,22 +106,22 @@ DEFINE_THREAD_WRAPPER(mystruct_sum_print_impl, MyStruct)
 
 https://gitlab.kitware.com/cmake/community/-/wikis/FAQ
 
-https://habr.com/ru/companies/pvs-studio/articles/708138/
+<!-- https://habr.com/ru/companies/pvs-studio/articles/708138/ -->
 
-https://github.com/cpm-cmake/CPM.cmake
+<!-- https://github.com/cpm-cmake/CPM.cmake -->
 
-https://github.com/friendlyanon/cmake-init
+<!-- https://github.com/friendlyanon/cmake-init -->
 
-(CMakePresets) https://github.com/friendlyanon/cmake-init-executable
+<!-- (CMakePresets) https://github.com/friendlyanon/cmake-init-executable -->
 
-https://github.com/TheLartians/ModernCppStarter
+<!-- https://github.com/TheLartians/ModernCppStarter -->
 
-https://github.com/pananton/cpp-lib-template
+<!-- https://github.com/pananton/cpp-lib-template -->
 
-https://github.com/cginternals/cmake-init
+<!-- https://github.com/cginternals/cmake-init -->
 
-## Compilers
+<!-- ## Compilers -->
 
-https://clang.llvm.org/docs/UsersManual.html
+<!-- https://clang.llvm.org/docs/UsersManual.html -->
 
-https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html
+<!-- https://best.openssf.org/Compiler-Hardening-Guides/Compiler-Options-Hardening-Guide-for-C-and-C++.html -->
