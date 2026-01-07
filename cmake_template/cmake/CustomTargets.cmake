@@ -1,3 +1,10 @@
+# Get source files
+set(PROJECT_SOURCE_FILES_GLOB
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h
+    # ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c
+)
+file(GLOB_RECURSE ALL_SOURCES CONFIGURE_DEPENDS ${PROJECT_SOURCE_FILES_GLOB})
+
 # ---- build-info ----
 
 # Usage: cmake --build build --target build-info
@@ -26,64 +33,50 @@ message(STATUS \"======================================\")
 set_target_properties(build-info PROPERTIES FOLDER "Maintenance")
 
 # ---- clang-tidy ----
-
 # Full analysis target
 
 # NOTE: for some reason on some linux systems LLVM package can't be located
-# find_package(LLVM CONFIG)
-# find_program(CLANG_TIDY_EXE
-#   NAMES clang-tidy
-#   PATHS ${LLVM_TOOLS_BINARY_DIR}
-#   NO_DEFAULT_PATH
-# )
-# if(NOT CLANG_TIDY_EXE)
-#   message(WARNING "clang-tidy not found in LLVM tools directory: ${LLVM_TOOLS_BINARY_DIR}")
-# else()
-#   message(STATUS "Found clang-tidy: ${CLANG_TIDY_EXE} (from LLVM ${LLVM_PACKAGE_VERSION})")
-# ...
+# find_package(LLVM CONFIG) find_program(CLANG_TIDY_EXE NAMES clang-tidy PATHS
+# ${LLVM_TOOLS_BINARY_DIR} NO_DEFAULT_PATH ) if(NOT CLANG_TIDY_EXE)
+# message(WARNING "clang-tidy not found in LLVM tools directory:
+# ${LLVM_TOOLS_BINARY_DIR}") else() message(STATUS "Found clang-tidy:
+# ${CLANG_TIDY_EXE} (from LLVM ${LLVM_PACKAGE_VERSION})") ...
 
-find_program(CLANG_TIDY_EXE
+find_program(
+  CLANG_TIDY_EXE
   NAMES clang-tidy clang-tidy21 clang-tidy20 clang-tidy19 clang-tidy18
   DOC "Path to clang-tidy executable")
 if(NOT CLANG_TIDY_EXE)
-  message(WARNING "clang-tidy not found. Full analysis target 'run-tidy-full' will not be created.")
+  message(
+    WARNING
+      "clang-tidy not found. Full analysis target 'run-tidy-full' will not be created."
+  )
 else()
-  file(GLOB_RECURSE ALL_PROJECT_SOURCE_FILES CONFIGURE_DEPENDS
-       ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
-       ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h)
-
   add_custom_target(
     run-tidy-full
-    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target
-            ${PROJECT_NAME}
-    COMMAND ${CLANG_TIDY_EXE} -p ${CMAKE_BINARY_DIR} ${ALL_PROJECT_SOURCE_FILES}
+    COMMAND ${CLANG_TIDY_EXE} -p ${CMAKE_BINARY_DIR} ${ALL_SOURCES}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Running full clang-tidy analysis on all source files..."
-    VERBATIM # for files with spaces
-  )
+    VERBATIM)
+  add_dependencies(run-tidy-full ${PROJECT_NAME})
   set_target_properties(run-tidy-full PROPERTIES FOLDER "Maintenance")
   message(STATUS "Full clang-tidy analysis target 'run-tidy-full' created.")
 endif()
 
 # ---- clang-format ----
 
-find_program(CLANG_FORMAT_EXE "clang-format")
+find_program(CLANG_FORMAT_EXE NAMES clang-format clang-format21 clang-format20
+                                    clang-format19 clang-format18)
 if(NOT CLANG_FORMAT_EXE)
   message(
     WARNING
       "clang-format not found. Format targets 'format' and 'check-format' will not be created."
   )
 else()
-  file(
-    GLOB_RECURSE ALL_FORMAT_SOURCE_FILES CONFIGURE_DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h
-    # ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c
-  )
-
   # Target for formatting the code
   add_custom_target(
     format
-    COMMAND ${CLANG_FORMAT_EXE} -i ${ALL_FORMAT_SOURCE_FILES}
+    COMMAND ${CLANG_FORMAT_EXE} -i ${ALL_SOURCES}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Formatting all source files with clang-format..."
     VERBATIM)
@@ -91,7 +84,7 @@ else()
   # Target to check the formatting of the code
   add_custom_target(
     check-format
-    COMMAND ${CLANG_FORMAT_EXE} --dry-run --Werror ${ALL_FORMAT_SOURCE_FILES}
+    COMMAND ${CLANG_FORMAT_EXE} --dry-run --Werror ${ALL_SOURCES}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Checking source files formatting with clang-format..."
     VERBATIM)
@@ -103,8 +96,7 @@ else()
 endif()
 
 # ---- cppcheck ----
-
-find_program(CPPCHECK_EXE "cppcheck")
+find_program(CPPCHECK_EXE NAMES cppcheck)
 if(NOT CPPCHECK_EXE)
   message(
     WARNING "cppcheck not found. Target 'run-cppcheck' will not be created.")
