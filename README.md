@@ -63,6 +63,11 @@ cmake --build build --target run-tidy-full
 cmake --build build --target build-info
 cmake --build build --target check-format
 cmake --build build --target format
+
+# Tests
+cmake --preset clang-debug
+cmake --build --preset clang-debug
+ctest --preset clang-debug
 ```
 
 # TODO

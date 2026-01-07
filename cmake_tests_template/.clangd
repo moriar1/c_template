@@ -1,0 +1,36 @@
+# Diagnostics:
+  # ClangTidy:
+    # Add: ["*"]
+    # Remove: [
+      # "fuchsia-trailing-return",
+      # "llvmlibc-*",
+
+      # "altera-struct-pack-align",
+      # "cppcoreguidelines-avoid-magic-numbers",
+      # "readability-magic-numbers",
+      # "cppcoreguidelines-init-variables",
+      # "readability-identifier-length",
+      # "bugprone-assignment-in-if-condition",
+      # "cert-err33-c",
+      # "altera-unroll-loops",
+      # "readability-isolate-declaration",
+      # "bugprone-easily-swappable-parameters",
+      # "concurrency-mt-unsafe",
+      # "google-readability-todo",
+      # "cppcoreguidelines-avoid-non-const-global-variables",
+      # "android-cloexec-open",
+      # "readability-function-cognitive-complexity"
+    # ]
+
+# CompileFlags:
+  # Add: [
+    # -std=c17,
+    # -Wall,
+    # -Wextra,
+    # -D_CLANGD=1,
+    # -I./include,
+    # -I/usr/local/include,
+  # ]
+
+# Index:
+  # StandardLibrary: true

@@ -1,0 +1,3 @@
+[submodule "cmake_tests_template/external/unity"]
+	path = cmake_tests_template/external/unity
+	url = https://github.com/ThrowTheSwitch/Unity
