@@ -29,7 +29,6 @@ target_compile_options(
             -Wwrite-strings
             -Wtype-limits
             -Wundef
-            -Wunused
             -Wcast-align
             -Wbad-function-cast
             -Wshift-count-overflow
@@ -40,8 +39,8 @@ target_compile_options(
             -Walloca
             -Wimplicit-fallthrough
             -Wnull-dereference
+            -Wmissing-variable-declarations
             -Wformat=2
-            -Wformat-signedness
             -Wstrict-overflow=4
             -Wswitch-enum
             -Wmissing-include-dirs

@@ -9,6 +9,7 @@ if(NOT EXISTS "${UNITY_ROOT_DIR}/src/unity.h")
 endif()
 
 add_library(unity_lib STATIC ${UNITY_ROOT_DIR}/src/unity.c)
+set_target_properties(unity_lib PROPERTIES C_CLANG_TIDY "")
 
 # Include .h
 target_include_directories(unity_lib PUBLIC ${UNITY_ROOT_DIR}/src)
